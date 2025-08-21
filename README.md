@@ -17,18 +17,17 @@ To get a local copy up and running, follow these simple steps.
 Make sure you have the following software installed on your machine:
 
 - [Node.js](https://nodejs.org/) (v18 or later is recommended)
-- [npm](https://www.npmjs.com/get-npm) or [yarn](https://classic.yarnpkg.com/en/docs/install/)
 
 ### Installation
 
 1.  **Clone the repository** (or download the source code):
     ```sh
-    git clone <your-repository-url>
+    git clone https://github.com/MikeSzklarz/CourseFlow.git
     ```
 
 2.  **Navigate to the project directory**:
     ```sh
-    cd <project-directory>
+    cd CourseFlow
     ```
 
 3.  **Install dependencies**:
