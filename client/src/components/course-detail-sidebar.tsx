@@ -3,13 +3,57 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X, BookOpen, Star, ChevronsRight } from 'lucide-react';
-import type { Course } from '@/lib/mock-data';
+import type { Course, PrerequisiteGroup, Prerequisites } from '@/lib/mock-data';
+import { cn } from '@/lib/utils';
 
 interface CourseDetailSidebarProps {
   course: Course | null;
   allCourses: Course[];
   onClose: () => void;
 }
+
+const PrerequisiteItem: React.FC<{ course: Course }> = ({ course }) => (
+  <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/50">
+    <ChevronsRight className="h-4 w-4 text-primary flex-shrink-0" />
+    <div>
+      <p className="font-medium">{course.code}</p>
+      <p className="text-sm text-muted-foreground">{course.title}</p>
+    </div>
+  </div>
+);
+
+const PrerequisiteGroupView: React.FC<{ group: PrerequisiteGroup; allCourses: Course[] }> = ({ group, allCourses }) => {
+  const description = group.type === 'or' ? 'One of the following is required:' : 'All of the following are required:';
+
+  return (
+    <div className="relative rounded-lg border bg-muted/20 p-4">
+      <p className="text-sm font-semibold text-muted-foreground mb-3">{description}</p>
+      <div className="space-y-3">
+        {group.courses.map((prereq, index) => (
+          <React.Fragment key={index}>
+            {typeof prereq === 'string' ? (
+              (() => {
+                const course = allCourses.find(c => c.id === prereq);
+                return course ? <PrerequisiteItem course={course} /> : null;
+              })()
+            ) : (
+              <PrerequisiteGroupView group={prereq as PrerequisiteGroup} allCourses={allCourses} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+const PrerequisiteView: React.FC<{ prerequisites: Prerequisites; allCourses: Course[] }> = ({ prerequisites, allCourses }) => {
+  if (!('type' in prerequisites)) {
+    return <p className="text-muted-foreground italic p-3 rounded-md bg-muted/50 text-center">No prerequisites for this course.</p>;
+  }
+  return <PrerequisiteGroupView group={prerequisites as PrerequisiteGroup} allCourses={allCourses} />;
+};
+
 
 export function CourseDetailSidebar({ course, allCourses, onClose }: CourseDetailSidebarProps) {
   if (!course) {
@@ -23,11 +67,7 @@ export function CourseDetailSidebar({ course, allCourses, onClose }: CourseDetai
       </div>
     );
   }
-
-  const prerequisites = course.prerequisites.map(prereqId => {
-    return allCourses.find(c => c.id === prereqId);
-  }).filter(Boolean) as Course[];
-
+  
   return (
     <div className="flex flex-col h-full bg-card">
        <CardHeader className="relative p-6 border-b">
@@ -59,22 +99,19 @@ export function CourseDetailSidebar({ course, allCourses, onClose }: CourseDetai
           </div>
 
           <div>
-            <h4 className="font-semibold text-lg mb-2 font-headline">Prerequisites</h4>
-            {prerequisites.length > 0 ? (
-              <ul className="space-y-2">
-                {prerequisites.map(prereq => (
-                  <li key={prereq.id} className="flex items-center gap-3 p-3 rounded-md border bg-muted/50">
-                    <ChevronsRight className="h-4 w-4 text-primary flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{prereq.code}</p>
-                      <p className="text-sm text-muted-foreground">{prereq.title}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground italic p-3 rounded-md bg-muted/50 text-center">No prerequisites for this course.</p>
-            )}
+            <h4 className="font-semibold text-lg mb-3 font-headline">Prerequisites</h4>
+            <div className="space-y-4">
+              <PrerequisiteView prerequisites={course.prerequisites} allCourses={allCourses} />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-lg mb-2 font-headline">Semesters Offered</h4>
+            <div className="flex flex-wrap gap-2">
+              {course.semesters_offered.map(semester => (
+                <Badge key={semester} variant="secondary">{semester}</Badge>
+              ))}
+            </div>
           </div>
         </div>
       </CardContent>
